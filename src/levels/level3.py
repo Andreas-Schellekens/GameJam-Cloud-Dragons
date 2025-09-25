@@ -26,9 +26,17 @@ def get_level_data(level_width, height):
         (2360, height - 240 - 32, 2320, 2520),
     ]
 
+    powerups = [
+        (260, height - 180 - 28, "tree"),
+        (1080, height - 220 - 28, "faucet"),
+        (2000, height - 200 - 28, "solar"),
+        (2650, height - 180 - 28, "recycle"),
+    ]
+
     return {
         "platforms": platforms,
         "enemies": enemies,
+        "powerups": powerups,
         "door_x": level_width - 120,
         "player_spawn": (64, height - 200),
     }

@@ -24,7 +24,8 @@ class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h):
         super().__init__()
         self.image = pygame.Surface((w, h))
-        self.image.fill((100, 100, 100))
+        self.image.fill(BROWN)
+        pygame.draw.rect(self.image, DARK_GREEN, (0, 0, w, min(h, 8)))
         self.rect = self.image.get_rect(topleft=(x, y))
 
 class Door(pygame.sprite.Sprite):
@@ -32,7 +33,9 @@ class Door(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.Surface((self.SIZE, self.SIZE))
-        self.image.fill((180, 200, 50))
+        self.image.fill(BROWN)
+        pygame.draw.rect(self.image, BLACK, (5, 5, self.SIZE - 10, self.SIZE - 10), 2)
+        pygame.draw.circle(self.image, (255, 255, 0), (self.SIZE - 15, self.SIZE // 2), 3)
         self.rect = self.image.get_rect(bottomleft=(x, y))
 
 class Player(pygame.sprite.Sprite):
@@ -42,8 +45,11 @@ class Player(pygame.sprite.Sprite):
 
     def __init__(self, x, y, platforms, enemies, all_sprites, door_group):
         super().__init__()
-        self.image = pygame.Surface((self.SIZE, self.SIZE))
+        self.image = pygame.Surface((self.SIZE, self.SIZE), pygame.SRCALPHA)
         self.image.fill(BLUE)
+        eye_pos = (self.SIZE * 2 // 3, self.SIZE // 3)
+        pygame.draw.circle(self.image, WHITE, eye_pos, 4)
+        pygame.draw.circle(self.image, BLACK, eye_pos, 2)
         self.rect = self.image.get_rect(topleft=(x, y))
         self.vx = 0
         self.vy = 0
@@ -227,6 +233,7 @@ class Game:
         self.platforms = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.door_group = pygame.sprite.Group()
+        self.powerups = pygame.sprite.Group()
 
         self.level_index = 0
         self.running = True
@@ -241,6 +248,7 @@ class Game:
         self.platforms.empty()
         self.enemies.empty()
         self.door_group.empty()
+        self.powerups.empty()
 
         # import chosen level module and get data
         mod_name = LEVEL_MODULES[index]
@@ -257,6 +265,12 @@ class Game:
             enemy = Enemy(x, y, mn, mx, self.platforms)
             self.enemies.add(enemy)
             self.all_sprites.add(enemy)
+
+        # create powerups
+        for p in data.get("powerups", []):
+            pu = PowerUp(p[0], p[1], p[2])
+            self.powerups.add(pu)
+            self.all_sprites.add(pu)
 
         # door
         door_x = data.get("door_x", LEVEL_WIDTH - 120)
@@ -282,6 +296,18 @@ class Game:
             surf = self.font.render(line, True, WHITE)
             self.screen.blit(surf, (8, y))
             y += 22
+
+    def draw_background(self, camera_x):
+        self.screen.fill((20, 20, 80)) # Dark blue night sky
+        # Parallax effect for stars
+        for i in range(200):
+            # Use a hash of i to get pseudo-random but consistent positions
+            x = (hash(i*3) % (LEVEL_WIDTH * 2)) - LEVEL_WIDTH // 2
+            y = hash(i*7) % HEIGHT
+            size = 1 + (hash(i*11) % 2)
+            # Slower scroll for distant stars
+            screen_x = (x - camera_x * 0.5) % WIDTH
+            pygame.draw.circle(self.screen, WHITE, (screen_x, y), size)
 
     def draw_world(self, camera_x):
         # draw each sprite at offset (world -> screen)
@@ -324,7 +350,7 @@ class Game:
             camera_x = max(0, min(self.player.rect.centerx - WIDTH // 2, LEVEL_WIDTH - WIDTH))
 
             # draw
-            self.screen.fill(BLACK)
+            self.draw_background(camera_x)
             self.draw_world(camera_x)
             self.draw_instructions()
 

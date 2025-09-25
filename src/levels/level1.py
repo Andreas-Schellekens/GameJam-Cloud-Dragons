@@ -26,9 +26,16 @@ def get_level_data(level_width, height):
         (1800, height - 140 - 32, 1700, 1900) # near the higher platforms cluster
     ]
 
+    powerups = [
+        (250, height - 160 - 28, "tree"),
+        (980, height - 160 - 28, "recycle"),
+        (1550, height - 140 - 28, "solar"),
+    ]
+
     return {
         "platforms": platforms,
         "enemies": enemies,
+        "powerups": powerups,
         "door_x": level_width - 120,
         "player_spawn": (64, height - 200),
     }
